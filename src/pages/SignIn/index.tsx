@@ -10,27 +10,38 @@ import getValidationErrors from '../../utils/getValidationErrors';
 import logo from '../../assets/logo.svg';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import { useAuth } from '../../hooks/AuthContext';
+
+interface SignInFormData {
+    email: string;
+    password: string;
+}
 
 const SignIn: React.FC = () => {
-
     const formRef = useRef<FormHandles>(null);
 
-    const handleSubmit = useCallback(async (data: object) => {
-        try {
-            formRef.current?.setErrors({});
-            const schema = Yup.object().shape({
-                email: Yup.string()
-                    .required('Email obrigatório.')
-                    .email('Digit um email válido.'),
-                password: Yup.string().required('Senha obrigatória.'),
-            });
+    const { signIn } = useAuth();
 
-            await schema.validate(data, { abortEarly: false });
-        } catch (error) {
-            const errors = getValidationErrors(error);
-            formRef.current?.setErrors(errors);
-        }
-    }, []);
+    const handleSubmit = useCallback(
+        async (data: SignInFormData) => {
+            try {
+                formRef.current?.setErrors({});
+                const schema = Yup.object().shape({
+                    email: Yup.string()
+                        .required('Email obrigatório.')
+                        .email('Digit um email válido.'),
+                    password: Yup.string().required('Senha obrigatória.'),
+                });
+
+                await schema.validate(data, { abortEarly: false });
+                signIn({ email: data.email, password: data.password });
+            } catch (error) {
+                const errors = getValidationErrors(error);
+                formRef.current?.setErrors(errors);
+            }
+        },
+        [signIn],
+    );
 
     return (
         <Container>
@@ -41,7 +52,12 @@ const SignIn: React.FC = () => {
                     <h1>Faça seu Logon</h1>
 
                     <Input name="email" icon={FiMail} placeholder="E-mail" />
-                    <Input name="password" icon={FiLock} placeholder="Senha" />
+                    <Input
+                        type="password"
+                        name="password"
+                        icon={FiLock}
+                        placeholder="Senha"
+                    />
 
                     <Button type="submit">Entrar</Button>
 
